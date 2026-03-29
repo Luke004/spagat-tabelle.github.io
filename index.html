@@ -184,7 +184,6 @@
     const statusEl = document.getElementById("status");
     const nameInput = document.getElementById("nameInput");
     const addNameBtn = document.getElementById("addNameBtn");
-    const bottomAddBtn = document.getElementById("bottomAddBtn");
     const reloadBtn = document.getElementById("reloadBtn");
 
     function setStatus(message = "", type = "") {
@@ -316,9 +315,6 @@
     }
 
     addNameBtn.addEventListener("click", nameHinzufuegen);
-    bottomAddBtn.addEventListener("click", () => {
-        nameInput.focus();
-    });
 
     reloadBtn.addEventListener("click", ladeDaten);
 
