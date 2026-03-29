@@ -27,14 +27,14 @@
             margin-bottom: 20px;
         }
 
-        .top-bar {
+        .bottom-bar {
             display: flex;
             gap: 10px;
-            margin-bottom: 16px;
+            margin-top: 16px;
             flex-wrap: wrap;
         }
 
-        .top-bar input {
+        .bottom-bar input {
             flex: 1;
             min-width: 220px;
             padding: 10px 12px;
@@ -43,8 +43,7 @@
             font-size: 14px;
         }
 
-        .top-bar button,
-        .bottom-add-btn {
+        .bottom-bar button {
             padding: 10px 16px;
             border: none;
             border-radius: 8px;
@@ -53,8 +52,7 @@
             color: white;
         }
 
-        .add-btn,
-        .bottom-add-btn {
+        .add-btn {
             background: #007bff;
         }
 
@@ -105,12 +103,6 @@
             opacity: 0.92;
         }
 
-        .bottom-row {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
-        }
-
         .status {
             margin-bottom: 12px;
             min-height: 20px;
@@ -154,17 +146,6 @@
 
     <div id="status" class="status"></div>
 
-    <div class="top-bar">
-        <input
-                type="text"
-                id="nameInput"
-                placeholder="Neuen Namen eingeben"
-                maxlength="50"
-        />
-        <button class="add-btn" id="addNameBtn">Hinzufügen</button>
-        <button class="reload-btn" id="reloadBtn">Neu laden</button>
-    </div>
-
     <table>
         <thead>
         <tr>
@@ -180,8 +161,15 @@
         </tbody>
     </table>
 
-    <div class="bottom-row">
-        <button class="bottom-add-btn" id="bottomAddBtn">+ Namen hinzufügen</button>
+    <div class="bottom-bar">
+        <input
+                type="text"
+                id="nameInput"
+                placeholder="Neuen Namen eingeben"
+                maxlength="50"
+        />
+        <button class="add-btn" id="addNameBtn">Hinzufügen</button>
+        <button class="reload-btn" id="reloadBtn">Neu laden</button>
     </div>
 </div>
 
