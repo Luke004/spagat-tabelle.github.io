@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tabelle mit Einheiten</title>
+    <title>Spagat-Tabelle</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
             padding: 30px;
+            margin: 0;
         }
 
         .container {
-            max-width: 700px;
+            max-width: 760px;
             margin: 0 auto;
             background: white;
             padding: 24px;
@@ -23,18 +24,55 @@
         h1 {
             margin-top: 0;
             text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .top-bar input {
+            flex: 1;
+            min-width: 220px;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .top-bar button,
+        .bottom-add-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+        }
+
+        .add-btn,
+        .bottom-add-btn {
+            background: #007bff;
+        }
+
+        .reload-btn {
+            background: #6c757d;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         th, td {
             padding: 12px;
             border-bottom: 1px solid #ddd;
             text-align: left;
+            vertical-align: middle;
         }
 
         th {
@@ -46,34 +84,45 @@
             gap: 8px;
         }
 
-        button {
+        .actions button {
             padding: 6px 12px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
+            color: white;
             font-size: 14px;
         }
 
         .plus-btn {
             background: #28a745;
-            color: white;
         }
 
         .minus-btn {
             background: #dc3545;
-            color: white;
-        }
-
-        .add-name-btn {
-            display: block;
-            margin: 0 auto;
-            background: #007bff;
-            color: white;
-            padding: 10px 16px;
         }
 
         button:hover {
-            opacity: 0.9;
+            opacity: 0.92;
+        }
+
+        .bottom-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-bottom: 12px;
+            min-height: 20px;
+            font-size: 14px;
+        }
+
+        .status.error {
+            color: #dc3545;
+        }
+
+        .status.success {
+            color: #198754;
         }
 
         .empty-message {
@@ -81,11 +130,40 @@
             color: #777;
             padding: 20px 0;
         }
+
+        .loading {
+            text-align: center;
+            color: #555;
+            padding: 16px 0;
+        }
+
+        @media (max-width: 600px) {
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .actions {
+                flex-wrap: wrap;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Einheiten-Tabelle</h1>
+    <h1>Spagat-Tabelle</h1>
+
+    <div id="status" class="status"></div>
+
+    <div class="top-bar">
+        <input
+                type="text"
+                id="nameInput"
+                placeholder="Neuen Namen eingeben"
+                maxlength="50"
+        />
+        <button class="add-btn" id="addNameBtn">Hinzufügen</button>
+        <button class="reload-btn" id="reloadBtn">Neu laden</button>
+    </div>
 
     <table>
         <thead>
@@ -95,43 +173,75 @@
             <th>Aktionen</th>
         </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+        <tr>
+            <td colspan="3" class="loading">Lade Daten...</td>
+        </tr>
+        </tbody>
     </table>
 
-    <button class="add-name-btn" id="addNameBtn">+ Namen hinzufügen</button>
+    <div class="bottom-row">
+        <button class="bottom-add-btn" id="bottomAddBtn">+ Namen hinzufügen</button>
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const personen = [
-        { name: "Clara", units: 13 },
-        { name: "Melli", units: 12 },
-        { name: "Franzi", units: 10 },
-        { name: "Denise", units: 11 },
-        { name: "Sina", units: 11 },
-        { name: "Lukas", units: 9 },
-        { name: "Mara", units: 11 },
-        { name: "Eileen", units: 7 },
-        { name: "Lea", units: 6 },
-        { name: "Amina", units: 6 },
-        { name: "Jason", units: 5 },
-        { name: "Maurice", units: 3 },
-        { name: "Klara", units: 2 },
-        { name: "Emma", units: 2 },
-        { name: "Paula", units: 1 }
-    ];
+    const SUPABASE_URL = "https://olznhftuzxvwklmmmits.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_6mPLWwIZkc6liA78bRr2UQ_WvNB-f5x";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const tableBody = document.getElementById("tableBody");
+    const statusEl = document.getElementById("status");
+    const nameInput = document.getElementById("nameInput");
     const addNameBtn = document.getElementById("addNameBtn");
+    const bottomAddBtn = document.getElementById("bottomAddBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
 
-    function sortierePersonen() {
-        personen.sort((a, b) => b.units - a.units || a.name.localeCompare(b.name));
+    function setStatus(message = "", type = "") {
+        statusEl.textContent = message;
+        statusEl.className = "status" + (type ? " " + type : "");
     }
 
-    function renderTable() {
-        sortierePersonen();
+    function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    async function ladeDaten() {
+        setStatus("");
+        tableBody.innerHTML = `
+        <tr>
+          <td colspan="3" class="loading">Lade Daten...</td>
+        </tr>
+      `;
+
+        const { data, error } = await supabaseClient
+            .from("einheiten")
+            .select("id, name, units")
+            .order("units", { ascending: false })
+            .order("name", { ascending: true });
+
+        if (error) {
+            console.error(error);
+            tableBody.innerHTML = `
+          <tr>
+            <td colspan="3" class="empty-message">Fehler beim Laden der Daten.</td>
+          </tr>
+        `;
+            setStatus("Fehler beim Laden: " + error.message, "error");
+            return;
+        }
+
+        renderTable(data || []);
+    }
+
+    function renderTable(personen) {
         tableBody.innerHTML = "";
 
-        if (personen.length === 0) {
+        if (!personen.length) {
             tableBody.innerHTML = `
           <tr>
             <td colspan="3" class="empty-message">Noch keine Namen vorhanden.</td>
@@ -140,51 +250,97 @@
             return;
         }
 
-        personen.forEach((person, index) => {
+        personen.forEach((person) => {
             const row = document.createElement("tr");
 
             row.innerHTML = `
-          <td>${person.name}</td>
+          <td>${escapeHtml(person.name)}</td>
           <td>${person.units}</td>
           <td>
             <div class="actions">
-              <button class="plus-btn" onclick="changeUnits(${index}, 1)">+</button>
-              <button class="minus-btn" onclick="changeUnits(${index}, -1)">-</button>
+              <button class="plus-btn">+</button>
+              <button class="minus-btn">-</button>
             </div>
           </td>
         `;
+
+            const plusBtn = row.querySelector(".plus-btn");
+            const minusBtn = row.querySelector(".minus-btn");
+
+            plusBtn.addEventListener("click", async () => {
+                await updateUnits(person.id, person.units + 1);
+            });
+
+            minusBtn.addEventListener("click", async () => {
+                const neuerWert = Math.max(0, person.units - 1);
+                await updateUnits(person.id, neuerWert);
+            });
 
             tableBody.appendChild(row);
         });
     }
 
-    function changeUnits(index, amount) {
-        personen[index].units += amount;
+    async function updateUnits(id, units) {
+        setStatus("");
 
-        if (personen[index].units < 0) {
-            personen[index].units = 0;
+        const { error } = await supabaseClient
+            .from("einheiten")
+            .update({ units })
+            .eq("id", id);
+
+        if (error) {
+            console.error(error);
+            setStatus("Fehler beim Aktualisieren: " + error.message, "error");
+            return;
         }
 
-        renderTable();
+        await ladeDaten();
     }
 
-    addNameBtn.addEventListener("click", () => {
-        const neuerName = prompt("Bitte Namen eingeben:");
+    async function nameHinzufuegen() {
+        const name = nameInput.value.trim();
 
-        if (!neuerName) return;
+        if (!name) {
+            setStatus("Bitte einen Namen eingeben.", "error");
+            return;
+        }
 
-        const bereinigterName = neuerName.trim();
-        if (bereinigterName === "") return;
+        setStatus("");
 
-        personen.push({
-            name: bereinigterName,
-            units: 0
-        });
+        const { error } = await supabaseClient
+            .from("einheiten")
+            .insert([{ name, units: 0 }]);
 
-        renderTable();
+        if (error) {
+            console.error(error);
+
+            if (error.message.toLowerCase().includes("duplicate") || error.code === "23505") {
+                setStatus("Dieser Name existiert bereits.", "error");
+            } else {
+                setStatus("Fehler beim Hinzufügen: " + error.message, "error");
+            }
+            return;
+        }
+
+        nameInput.value = "";
+        setStatus("Name erfolgreich hinzugefügt.", "success");
+        await ladeDaten();
+    }
+
+    addNameBtn.addEventListener("click", nameHinzufuegen);
+    bottomAddBtn.addEventListener("click", () => {
+        nameInput.focus();
     });
 
-    renderTable();
+    reloadBtn.addEventListener("click", ladeDaten);
+
+    nameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            nameHinzufuegen();
+        }
+    });
+
+    ladeDaten();
 </script>
 </body>
 </html>
