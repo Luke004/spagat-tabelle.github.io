@@ -310,6 +310,7 @@
             minusBtn.addEventListener("click", async () => {
                 const neuerWert = Math.max(0, person.units - 1);
                 await updateUnits(person.id, neuerWert);
+                showToast(`Du hast ${person.name} einen Punkt genommen`);
             });
 
             tableBody.appendChild(row);
