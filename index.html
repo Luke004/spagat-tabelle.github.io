@@ -159,6 +159,12 @@
             transform: translateX(-50%) translateY(20px);
         }
 
+        .today-plus {
+            color: #28a745;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
         @media (max-width: 600px) {
             th, td {
                 padding: 10px 8px;
@@ -245,6 +251,14 @@
         return div.innerHTML;
     }
 
+    function istHeute(dateString) {
+        if (!dateString) return false;
+
+        const heute = new Date().toISOString().split("T")[0];
+
+        return dateString === heute;
+    }
+
     async function ladeDaten() {
         setStatus("");
         tableBody.innerHTML = `
@@ -255,7 +269,7 @@
 
         const { data, error } = await supabaseClient
             .from("einheiten")
-            .select("id, name, units")
+            .select("id, name, units, last_point_date")
             .order("units", { ascending: false })
             .order("name", { ascending: true });
 
@@ -290,7 +304,10 @@
 
             row.innerHTML = `
           <td>${escapeHtml(person.name)}</td>
-          <td>${person.units}</td>
+          <td>
+            ${person.units}
+            ${istHeute(person.last_point_date) ? '<span class="today-plus">(+1)</span>' : ''}
+          </td>
           <td>
             <div class="actions">
               <button class="plus-btn">+</button>
@@ -303,7 +320,7 @@
             const minusBtn = row.querySelector(".minus-btn");
 
             plusBtn.addEventListener("click", async () => {
-                await updateUnits(person.id, person.units + 1);
+                await updateUnits(person.id, person.units + 1, true);
                 showToast(`Du hast ${person.name} einen Punkt gegeben`);
             });
 
@@ -317,12 +334,22 @@
         });
     }
 
-    async function updateUnits(id, units) {
+    async function updateUnits(id, units, isPlus = false) {
         setStatus("");
+
+        const updateData = {
+            units: units
+        };
+
+        // Falls + gedrückt wurde:
+        if (isPlus) {
+            const heute = new Date().toISOString().split("T")[0];
+            updateData.last_point_date = heute;
+        }
 
         const { error } = await supabaseClient
             .from("einheiten")
-            .update({ units })
+            .update(updateData)
             .eq("id", id);
 
         if (error) {
