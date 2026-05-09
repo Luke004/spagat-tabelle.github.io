@@ -254,7 +254,7 @@
     function istHeute(dateString) {
         if (!dateString) return false;
 
-        const heute = new Date().toISOString().split("T")[0];
+        const heute = new Date().toLocaleDateString('en-CA');
 
         return dateString === heute;
     }
@@ -343,7 +343,7 @@
 
         // Bei + → heutiges Datum speichern
         if (isPlus) {
-            const heute = new Date().toISOString().split("T")[0];
+            const heute = new Date().toLocaleDateString('en-CA');
             updateData.last_point_date = heute;
         }
 
