@@ -326,7 +326,7 @@
 
             minusBtn.addEventListener("click", async () => {
                 const neuerWert = Math.max(0, person.units - 1);
-                await updateUnits(person.id, neuerWert);
+                await updateUnits(person.id, neuerWert, false, true);
                 showToast(`Du hast ${person.name} einen Punkt genommen`);
             });
 
@@ -334,17 +334,22 @@
         });
     }
 
-    async function updateUnits(id, units, isPlus = false) {
+    async function updateUnits(id, units, isPlus = false, isMinus = false) {
         setStatus("");
 
         const updateData = {
             units: units
         };
 
-        // Falls + gedrückt wurde:
+        // Bei + → heutiges Datum speichern
         if (isPlus) {
             const heute = new Date().toISOString().split("T")[0];
             updateData.last_point_date = heute;
+        }
+
+        // Bei - → (+1) wieder entfernen
+        if (isMinus) {
+            updateData.last_point_date = null;
         }
 
         const { error } = await supabaseClient
