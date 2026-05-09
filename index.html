@@ -129,6 +129,36 @@
             padding: 16px 0;
         }
 
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(33, 33, 33, 0.95);
+            color: white;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 15px;
+            z-index: 9999;
+
+            opacity: 0;
+            pointer-events: none;
+
+            transition:
+                    opacity 0.4s ease,
+                    transform 0.4s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.hide {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+
         @media (max-width: 600px) {
             th, td {
                 padding: 10px 8px;
@@ -189,6 +219,24 @@
     function setStatus(message = "", type = "") {
         statusEl.textContent = message;
         statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    let toastTimeout;
+
+    function showToast(message) {
+        const toast = document.getElementById("toast");
+
+        toast.textContent = message;
+
+        toast.classList.remove("hide");
+        toast.classList.add("show");
+
+        clearTimeout(toastTimeout);
+
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove("show");
+            toast.classList.add("hide");
+        }, 10000);
     }
 
     function escapeHtml(text) {
@@ -256,6 +304,7 @@
 
             plusBtn.addEventListener("click", async () => {
                 await updateUnits(person.id, person.units + 1);
+                showToast(`Du hast ${person.name} einen Punkt gegeben`);
             });
 
             minusBtn.addEventListener("click", async () => {
@@ -326,5 +375,6 @@
 
     ladeDaten();
 </script>
+<div id="toast" class="toast"></div>
 </body>
 </html>
